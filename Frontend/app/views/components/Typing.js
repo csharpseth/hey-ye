@@ -18,8 +18,8 @@ function Typing(props) {
             alignItems: 'center',
             
             margin: 5,
-            width: 90,
-            height: 40
+            width: 60,
+            height: 30
         }}>
             
             <PulsingBubble delay={0} />

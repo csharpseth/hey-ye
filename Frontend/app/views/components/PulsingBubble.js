@@ -38,11 +38,11 @@ function PulsingBubble(props) {
 
     return (
         <Animated.View style={{
-            width: 8,
-            height: 8,
+            width: 6,
+            height: 6,
             borderRadius: 50,
             backgroundColor: Colors.LightGray,
-            margin: 5,
+            margin: 3,
             transform: [{scale: scale}]
         }} />
     );

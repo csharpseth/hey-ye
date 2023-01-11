@@ -1,17 +1,24 @@
-import { Text, View, StyleSheet, ScrollView, KeyboardAvoidingView, TextInput, TouchableOpacity, Image } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+//REACT::
+import { Text, View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { useContext, useEffect, useRef, useState } from 'react';
 
-import { Camera } from 'expo-camera';
+//EXPO::
+import { Camera, CameraType } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library'
+
+//CONTEXT::
+import { FeedContext } from '../../contexts/FeedContext';
+
+//CONFIG::
 import Colors from '../../config/Colors';
 
 function CameraScreen({navigation}, props) {
     const [hasCameraPermissions, setHasCameraPermissions] = useState()
     const [hasMediaPermissions, setHasMediaPermissions] = useState()
     const [photo, setPhoto] = useState()
-    const [captured, setCaptured] = useState(false)
+    const [type, setType] = useState(CameraType.back)
 
-    const { testFunction } = props
+    const { SendImage } = useContext(FeedContext)
 
     const cameraRef = useRef(null)
 
@@ -31,17 +38,16 @@ function CameraScreen({navigation}, props) {
         return <Text>Requires Permission To Use Camera!</Text>
     }
     
+    const SwitchCamera = () => {
+        setType(type === CameraType.back ? CameraType.front : CameraType.back)
+    }
+
     const CapturePicture = async() => {
         const options = {
             quality: 1,
             base64: true,
             exif: false,
         }
-
-        setCaptured(true)
-        setTimeout(() => setCaptured(false), 75)
-        
-        testFunction()
 
         const newPhoto = await cameraRef.current.takePictureAsync(options)
         setPhoto(newPhoto)
@@ -54,7 +60,11 @@ function CameraScreen({navigation}, props) {
                 <Image style={styles.preview} source={{ uri: "data:image/jpg;base64," + photo.base64 }} />
 
                 <TouchableOpacity style={[styles.icon, styles.accept]} onPress={() => {
-                    setPhoto(undefined)
+                    SendImage(photo.base64, photo.width, photo.height)
+                    setTimeout(() => {
+                        setPhoto(undefined)
+                        navigation.navigate('Home')
+                    }, 200)
                 }}>
                     <Image source={require('../../assets/accept-icon.png')} style={styles.fillImage} />
                 </TouchableOpacity>
@@ -69,9 +79,13 @@ function CameraScreen({navigation}, props) {
     }
 
     return (
-        <Camera style={styles.container} ref={cameraRef}>
+        <Camera style={styles.container} type={type} ref={cameraRef}>
             <TouchableOpacity style={styles.backArrow} onPress={() => {navigation.navigate('Home')}}>
                 <Image source={require('../../assets/back-icon.png')} style={styles.fillImage} />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.switchButton} onPress={SwitchCamera}>
+                <Image source={require('../../assets/switch-icon.png')} style={styles.fillImage} />
             </TouchableOpacity>
 
             <View style={styles.interactionBar}>
@@ -117,6 +131,14 @@ const styles = StyleSheet.create({
     backArrow: {
         position: 'absolute',
         left: 10,
+        top: 20,
+
+        width: 30,
+        height: 30
+    },
+    switchButton: {
+        position: 'absolute',
+        right: 10,
         top: 20,
 
         width: 30,

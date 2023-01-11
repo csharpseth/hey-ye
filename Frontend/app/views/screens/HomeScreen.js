@@ -1,63 +1,32 @@
+//REACT::
 import { Text, View, StyleSheet, ScrollView, KeyboardAvoidingView, TextInput, TouchableOpacity, Image } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
+//EXPO::
 import { BlurView } from 'expo-blur';
 
-import axios from 'axios';
+//Contexts::
+import { FeedContext } from '../../contexts/FeedContext';
 
+//Components & Config::
 import Colors from '../../config/Colors';
 import Message from '../components/Message';
 import Typing from '../components/Typing';
+import ImageMessage from '../components/ImageMessage';
 
 function HomeScreen({navigation}) {
-
-    const [statement, setStatement] = useState('')
-    const [feed, setFeed] = useState([])
-
     const [textInput, setTextInput] = useState('')
     const [inputFocused, setInputFocused] = useState(false)
-    const [waitingOnResponse, setWaitingOnResponse] = useState(false)
     
     const scrollRef = useRef(null)
 
-    const GetQuote = () => {
-        axios.get(`https://api.kanye.rest/`)
-        .then(r => {
-            setStatement(r.data.quote)
-        }).catch(e => {
-            console.log(`Error: ${e}`);
-        })
-    }
-    
-    const RandomNumber = (min, max) => {
-        return Math.floor(Math.random() * max) + min
-    }
+    const { feed, waitingOnResponse, SendText } = useContext(FeedContext)
 
-    const AddMessage = (content, sent) => {
-        let currentFeed = feed
-        currentFeed.push({
-            sent,
-            content
-        })
-        if(sent === false) {
-            setWaitingOnResponse(false)
-        }
-
-        setFeed(currentFeed)
-    }
-
-    const SendText = () => {
-        GetQuote()
+    const SendAText = () => {
         let cachedText = textInput
         setTextInput('')
-        AddMessage(cachedText, true)
-        setWaitingOnResponse(true)
-        setTimeout(() => AddMessage(statement, false), RandomNumber(2000, 8000))
+        SendText(cachedText)
     }
-
-    useEffect(() => {
-        GetQuote()
-    }, [])
 
     const ScrollToEnd = () => {
         scrollRef.current.scrollToEnd({ animated: true })
@@ -68,13 +37,12 @@ function HomeScreen({navigation}) {
 
             <ScrollView style={{ flex: 1, width: '100%', overflow: 'visible' }}
             ref={scrollRef}
-            onLayout={e => {
-                ScrollToEnd()
-            }}>
+            onLayout={ScrollToEnd}
+            onContentSizeChange={ScrollToEnd}>
             
             
             <View style={styles.messageFeed}>
-                {feed.map((message, index) => <Message content={message.content} sent={message.sent} key={index} />)}
+                {feed.map((message, index) => message.isPhoto ? <ImageMessage photo={message.photo} sent={message.sent} key={index} /> : <Message content={message.content} sent={message.sent} key={index} />)}
                 
                 {waitingOnResponse ? <Typing /> : ''}
             </View>
@@ -95,7 +63,7 @@ function HomeScreen({navigation}) {
                     onChangeText={content => setTextInput(content)}
                     onFocus={() => {setInputFocused(true)}} onBlur={() => setInputFocused(false)} />
                 {inputFocused && textInput !== '' ? 
-                <TouchableOpacity style={styles.sendButton} onPress={SendText}>
+                <TouchableOpacity style={styles.sendButton} onPress={SendAText}>
                     <Image source={require('../../assets/send-icon.png')}  style={styles.fillImage}/>
                 </TouchableOpacity>    
                 :''
