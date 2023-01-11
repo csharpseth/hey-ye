@@ -4,7 +4,6 @@ import { useContext, useEffect, useRef, useState } from 'react';
 
 //EXPO::
 import { Camera, CameraType } from 'expo-camera';
-import * as MediaLibrary from 'expo-media-library'
 
 //CONTEXT::
 import { FeedContext } from '../../contexts/FeedContext';
@@ -12,9 +11,8 @@ import { FeedContext } from '../../contexts/FeedContext';
 //CONFIG::
 import Colors from '../../config/Colors';
 
-function CameraScreen({navigation}, props) {
+export default function CameraScreen({ navigation }) {
     const [hasCameraPermissions, setHasCameraPermissions] = useState()
-    const [hasMediaPermissions, setHasMediaPermissions] = useState()
     const [photo, setPhoto] = useState()
     const [type, setType] = useState(CameraType.back)
 
@@ -25,10 +23,7 @@ function CameraScreen({navigation}, props) {
     useEffect(() => {
         (async () => {
             const cameraPermission = await Camera.requestCameraPermissionsAsync()
-            const mediaPermission = await MediaLibrary.requestPermissionsAsync()
-
             setHasCameraPermissions(cameraPermission)
-            setHasMediaPermissions(mediaPermission)
         })()
     }, [])
 
@@ -54,7 +49,6 @@ function CameraScreen({navigation}, props) {
     }
 
     if(photo) {
-
         return (
             <View style={styles.container}>
                 <Image style={styles.preview} source={{ uri: "data:image/jpg;base64," + photo.base64 }} />
@@ -178,5 +172,3 @@ const styles = StyleSheet.create({
       flex: 1
     }
 })
-
-export default CameraScreen;

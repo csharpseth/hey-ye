@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native'
 import Colors from '../../config/Colors';
 
-function Message(props) {
+export default function Message(props) {
     const {content, sent} = props
 
     return (
@@ -32,5 +32,3 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.Blue,
     },
 })
-
-export default Message;

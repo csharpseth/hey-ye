@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, View } from 'react-native';
+import { Animated } from 'react-native';
 import Colors from '../../config/Colors';
 
-function PulsingBubble(props) {
+export default function PulsingBubble(props) {
 
     const { delay } = props
 
@@ -47,5 +47,3 @@ function PulsingBubble(props) {
         }} />
     );
 }
-
-export default PulsingBubble;

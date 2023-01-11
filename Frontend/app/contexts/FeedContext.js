@@ -5,35 +5,90 @@ import { BASEURL } from "../config/URLs";
 export const FeedContext = createContext()
 
 export const FeedProvider = ({ children }) => {
-
+    //STATEFUL VARIABLES
     const [feed, setFeed] = useState([])
-    const [statement, setStatement] = useState('')
     const [waitingOnResponse, setWaitingOnResponse] = useState(false)
-
-    const GetQuote = () => {
-        axios.get(`https://api.kanye.rest/`)
-        .then(r => {
-            setStatement(r.data.quote)
-        }).catch(e => {
-            console.log(`Error: ${e}`);
-        })
-    }
-
-    const GetImage = () => {
-        const num = RandomNumber(1, 13)
-
-        axios.get(`${BASEURL}/kanye/kanye-${num}.jpg`)
-        .then(r => {
-            setStatement(r.data.quote)
-        }).catch(e => {
-            console.log(`Error: ${e}`);
-        })
-    }
     
+    //STATELESS VARIABLES
+    let statement = ''
+    let photo = undefined
+
+    //CONFIG VARIABLES
+    const responseConfig = {
+        chanceOfQuote: 85,
+        chanceOfImage: 15,
+        minResponseDelay: 1000,
+        maxResponseDelay: 6000
+    }
+
+    //UTILITY FUNCTIONS
     const RandomNumber = (min, max) => {
         return Math.floor(Math.random() * max) + min
     }
+    const ClearFeed = () => {
+        setFeed([])
+        setWaitingOnResponse(false)
+        statement = ''
+        photo = undefined
 
+        GetQuote()
+        GetImage()
+    }
+    const IsCommand = (input) => {
+        return input.startsWith(':')
+    }
+    const RunCommand = (input) => {
+        const str = input.toLowerCase()
+        switch (str) {
+            case ':clear':
+                ClearFeed()
+                break;
+        
+            default:
+                break;
+        }
+    }
+
+    //RESPONSE MANAGEMENT FUNCTIONS
+    const GetQuote = () => {
+        axios.get(`${BASEURL}/quote`)
+        .then(r => {
+            if(r.data.error !== undefined) {
+                console.log(r.data.error)
+                return
+            }
+            statement = r.data.quote
+        }).catch(e => {
+            console.log(`Error: ${e}`);
+        })
+    }
+    const GetImage = () => {
+        axios.get(`${BASEURL}/image`)
+        .then(res => {
+            if(res.data.error !== undefined) {
+                console.log(res.data.error)
+                return
+            }
+            photo = res.data
+        }).catch(e => {
+            console.log(`Error: ${e}`);
+        })
+    }
+    const GetResponse = () => {
+        const total = responseConfig.chanceOfImage + responseConfig.chanceOfQuote
+        const poll = RandomNumber(0, total)
+        const delay = RandomNumber(responseConfig.minResponseDelay, responseConfig.maxResponseDelay)
+        
+        if(poll <= responseConfig.chanceOfQuote) {
+            setTimeout(() => AddMessage(statement, false), delay)
+            GetQuote()
+        } else {
+            setTimeout(() => AddImageMessage(photo, false), delay)
+            GetImage()
+        }
+    }
+
+    //FEED FUNCTIONS
     const AddMessage = (content, sent) => {
         let currentFeed = feed
         currentFeed.push({
@@ -51,7 +106,6 @@ export const FeedProvider = ({ children }) => {
             return feed
         })
     }
-
     const AddImageMessage = (photo, sent) => {
         let currentFeed = feed
         currentFeed.push({
@@ -70,26 +124,34 @@ export const FeedProvider = ({ children }) => {
         })
     }
 
+    //USER INPUT FUNCTIONALITY
     const SendText = (message) => {
-        GetQuote()
-        AddMessage(message, true)
-        setWaitingOnResponse(true)
-        setTimeout(() => AddMessage(statement, false), RandomNumber(2000, 8000))
-    }
+        if(IsCommand(message))
+        {
+            RunCommand(message)
+            return
+        }
 
+        GetResponse()
+        setWaitingOnResponse(true)
+
+        AddMessage(message, true)
+    }
     const SendImage = (base64, width, height) => {
         axios.post(`${BASEURL}/saveimage`, { imagesrc: base64, width, height })
         .then(res => {
-            GetQuote()
-            AddImageMessage(res.data, true)
+            GetResponse()
             setWaitingOnResponse(true)
-            setTimeout(() => AddMessage(statement, false), RandomNumber(2000, 8000))
+
+            AddImageMessage(res.data, true)
         }).catch(e => {
             console.log(`Failed To Save Image: ${e}`)
         })
     }
 
+    //STARTUP FUNCTIONS
     useEffect(() => {
+        GetImage()
         GetQuote()
     }, [])
 
