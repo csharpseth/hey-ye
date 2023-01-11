@@ -23,7 +23,7 @@ Built with React Native, and tested on iPhone SE 2nd Gen
 ## How Does It Work?
 
 ### Kanye Quotes:
-I start by using the [Kanye.Rest](https://kanye.rest/) API to fetch a random quote. I encapsulated this in my own API, made with NodeJS and Express, since I had to use it to manage the pictures anyways.
+I start by using the [Kanye.Rest](https://kanye.rest/) API to fetch a random quote. I encapsulated this in my own API, made with NodeJS and Express, since I had to use it to manage the pictures anyways. Whenever you send a message it polls a random number to determine whether to respond with a Quote or an Image.
 
 ### Sending Images:
 Using the [Expo-Camera](https://docs.expo.dev/versions/latest/sdk/camera/) package I simply created a Camera screen in my navigation. Once a picture is take you are prompted to keep or delete it. If you decide to keep it, the Base64 value of the image is sent to my API, along with its width and height. It is then saved to a publicly exposed directory with a unique name as a PNG. The API the responds with the file name and its dimensions. Then I simply reference that as my image source in the message.
