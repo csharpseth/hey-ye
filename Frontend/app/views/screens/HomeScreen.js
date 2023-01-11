@@ -1,14 +1,15 @@
 import { Text, View, StyleSheet, ScrollView, KeyboardAvoidingView, TextInput, TouchableOpacity, Image } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
-import axios from 'axios';
 
 import { BlurView } from 'expo-blur';
+
+import axios from 'axios';
 
 import Colors from '../../config/Colors';
 import Message from '../components/Message';
 import Typing from '../components/Typing';
 
-function HomeScreen() {
+function HomeScreen({navigation}) {
 
     const [statement, setStatement] = useState('')
     const [feed, setFeed] = useState([])
@@ -16,6 +17,7 @@ function HomeScreen() {
     const [textInput, setTextInput] = useState('')
     const [inputFocused, setInputFocused] = useState(false)
     const [waitingOnResponse, setWaitingOnResponse] = useState(false)
+    
     const scrollRef = useRef(null)
 
     const GetQuote = () => {
@@ -50,20 +52,24 @@ function HomeScreen() {
         setTextInput('')
         AddMessage(cachedText, true)
         setWaitingOnResponse(true)
-        setTimeout(() => AddMessage(statement, false), RandomNumber(2000, 10000))
+        setTimeout(() => AddMessage(statement, false), RandomNumber(2000, 8000))
     }
 
     useEffect(() => {
         GetQuote()
     }, [])
 
+    const ScrollToEnd = () => {
+        scrollRef.current.scrollToEnd({ animated: true })
+    }
+
     return (
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}  style={styles.container}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}  style={styles.container} on>
 
-            
-
-            <ScrollView style={{ flex: 1, width: '100%', overflow: 'visible' }} ref={scrollRef} showsVerticalScrollIndicator={true} onContentSizeChange={() => {
-                scrollRef.current.scrollToEnd({ animated: true })
+            <ScrollView style={{ flex: 1, width: '100%', overflow: 'visible' }}
+            ref={scrollRef}
+            onLayout={e => {
+                ScrollToEnd()
             }}>
             
             
@@ -76,23 +82,35 @@ function HomeScreen() {
             
             
             <BlurView intensity={65} tint={'dark'} style={[styles.newMessageContainer]}>
+                <TouchableOpacity style={styles.cameraButton}
+                onPress={() => navigation.navigate('Camera')}>
+                    <Image source={require('../../assets/camera-icon.png')} style={styles.fillImage} />
+                </TouchableOpacity>
+
                 <TextInput style={[styles.inputField]}
                     value={textInput}
                     placeholder='Message...'
-                    placeholderTextColor={Colors.LightGray}
+                    placeholderTextColor={Colors.Gray}
                     keyboardAppearance={'dark'}
                     onChangeText={content => setTextInput(content)}
-                    onFocus={() => {scrollRef.current.scrollToEnd({ animated: true }); setInputFocused(true)}} onBlur={() => setInputFocused(false)} />
+                    onFocus={() => {setInputFocused(true)}} onBlur={() => setInputFocused(false)} />
                 {inputFocused && textInput !== '' ? 
                 <TouchableOpacity style={styles.sendButton} onPress={SendText}>
-                    <Image source={require('../../assets/send-icon.png')}  style={styles.sendButtonImg}/>
+                    <Image source={require('../../assets/send-icon.png')}  style={styles.fillImage}/>
                 </TouchableOpacity>    
                 :''
                 }
             </BlurView>
 
             <BlurView intensity={90} tint={'dark'} style={styles.header}>
-                
+                <TouchableOpacity style={styles.backArrow}>
+                    <Image source={require('../../assets/back-icon.png')} style={styles.fillImage} />
+                </TouchableOpacity>
+
+                <View style={styles.contactImg}>
+                    <Image source={require('../../assets/ye.png')} style={styles.fillImage} />
+                </View>
+                <Text style={styles.contactText}>Kanye</Text>
             </BlurView>
 
         </KeyboardAvoidingView>
@@ -117,6 +135,42 @@ const styles = StyleSheet.create({
         paddingTop: headerHeight,
         zIndex: 1,
     },
+    //Generic Style for all Icons/Other Images I want kept in their container
+    fillImage:{
+        width: '100%',
+        height: '100%'
+    },
+    //Heading Contains: ( Back Arrow, Contact Image, and Contact Text )
+    header: {
+        position: 'absolute',
+        top: 0,
+        width: '100%',
+        height: headerHeight,
+        zIndex: 4,
+        paddingTop: 20,
+
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    backArrow: {
+        position: 'absolute',
+        left: 10,
+
+        width: 30,
+        height: 30
+    },
+    contactImg: {
+        width: 55,
+        height: 55,
+        overflow: 'hidden',
+        borderRadius: 30
+    },
+    contactText: {
+        color: Colors.White,
+        marginTop: 3
+    },
+
+    //Message Input Field ( Where you type a new message :D )
     newMessageContainer: {
         bottom: 0,
         width: '100%',
@@ -125,12 +179,14 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 20,
         padding: 10,
         justifyContent: 'center',
-        alignItems: 'flex-start'
+        alignItems: 'center',
+        flexDirection: 'row'
     },
     inputField: {
         borderColor: Colors.Gray,
         borderWidth: 1,
         width: '100%',
+        flexShrink: 1,
         color: Colors.White,
         padding: 10,
         paddingLeft: 15,
@@ -142,20 +198,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    message: {
-        alignSelf: 'flex-start',
-        backgroundColor: Colors.Gray,
-        borderRadius: 25,
-        flex: 1,
-
-        margin: 10,
-        padding: 15,
-        maxWidth: '75%'
-    },
-    messageText: {
-        fontSize: 20,
-        color: Colors.White
-    },
     sendButton: {
         position: 'absolute',
         right: 16,
@@ -166,17 +208,13 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         backgroundColor: Colors.Blue
     },
-    sendButtonImg: {
-        width: '100%',
-        height: '100%'
+    cameraButton: {
+        width: 30,
+        height: 30,
+        overflow: 'hidden',
+        marginRight: 10
     },
-    header: {
-        position: 'absolute',
-        top: 0,
-        width: '100%',
-        height: headerHeight,
-        zIndex: 4,
-    }
+
 })
 
 export default HomeScreen;
