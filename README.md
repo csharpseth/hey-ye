@@ -1,4 +1,4 @@
-# Hey, Ye - The App Nobody Needs
+# Hey, Ye - The App Nobody Wanted
 A chat app where your only contact is Kanye. Using the kanye.rest api you can chat and receive special quotes from kanye himself.
 
 Built with React Native, and tested on iPhone SE 2nd Gen
